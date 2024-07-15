@@ -1,0 +1,87 @@
+version: '3.8'
+
+services:
+  timescaledb:
+    image: timescale/timescaledb:latest-pg12
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - timescaledb-data:/var/lib/postgresql/data
+      - ./services/timescaledb/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./services/timescaledb/timescaledb.conf:/etc/postgresql/postgresql.conf
+
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+    ports:
+      - "80:80"
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+
+  mosquitto:
+    image: eclipse-mosquitto
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+      - "8883:8883"
+    environment:
+      - MOSQUITTO_USERNAME=${MOSQUITTO_USERNAME}
+      - MOSQUITTO_PASSWORD=${MOSQUITTO_PASSWORD}
+    volumes:
+      - mosquitto-data:/mosquitto/data
+      - mosquitto-logs:/mosquitto/logs
+      - ./config/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - ./config/mosquitto/mosquitto-entrypoint.sh:/mosquitto-entrypoint.sh
+      - ./config/mosquitto/password_file:/mosquitto/config/password_file
+    entrypoint: ["/mosquitto-entrypoint.sh"]
+    healthcheck:
+      test: ["CMD", "mosquitto_pub", "-h", "localhost", "-t", "test", "-m", "test", "-u", "${MOSQUITTO_USERNAME}", "-P", "${MOSQUITTO_PASSWORD}"]
+      interval: 30s
+      retries: 10
+      start_period: 60s
+
+  device_simulation:
+    build: ./services/device_simulation
+    environment:
+      - MQTT_BROKER=${MQTT_BROKER}
+      - MQTT_PORT=${MQTT_PORT}
+      - MQTT_PUBLISH_TOPIC=${MQTT_PUBLISH_TOPIC}
+      - MQTT_SUBSCRIBE_TOPIC=${MQTT_SUBSCRIBE_TOPIC}
+      - MQTT_USERNAME=${MOSQUITTO_USERNAME}
+      - MQTT_PASSWORD=${MOSQUITTO_PASSWORD}
+      - DEVICE_ID=${DEVICE_ID}
+      - SENSOR_NAME=${SENSOR_NAME}
+    depends_on:
+      mosquitto:
+        condition: service_healthy
+    volumes:
+      - ./config/device/device_config.json:/app/config/device/device_config.json
+
+
+  emqx:
+    image: emqx/emqx:latest
+    ports:
+      - "18083:18083"  # EMQX Dashboard
+    environment:
+      - EMQX_NAME=emqx
+      - EMQX_HOST=node1.emqx.io
+      - EMQX_NODE__COOKIE=emqxsecretcookie
+      - EMQX_LOADED_PLUGINS=emqx_management,emqx_dashboard
+    volumes:
+      - emqx-data:/opt/emqx/data
+      - emqx-log:/opt/emqx/log
+      - ./config/emqx/emqx_bridge_mqtt.conf:/opt/emqx/etc/emqx_bridge_mqtt.conf  # Mount the bridge configuration
+
+volumes:
+  timescaledb-data:
+  pgadmin-data:
+  mosquitto-data:
+  mosquitto-logs:
+  emqx-data:
+  emqx-log:

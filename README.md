@@ -1,2 +1,2 @@
 # IoTExperimentsLab
-IoTExperimentsLab is a comprehensive repository for experimenting with Internet of Things (IoT) technologies using TimescaleDB and MQTT.
+IoTExperimentsLab is a comprehensive repository for experimenting with Internet of Things (IoT) technologies using TimescaleDB and MQTT. This project aims to create a versatile and scalable environment for collecting, storing, and analyzing IoT data through a combination of microservices, containerized applications, and databases. The setup leverages Docker Compose to orchestrate multiple services and applications seamlessly.

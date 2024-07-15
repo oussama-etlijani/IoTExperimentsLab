@@ -1,0 +1,27 @@
+[
+    {
+        "name": "temperature_sensor",
+        "min_value": 20.0,
+        "max_value": 30.0
+    },
+    {
+        "name": "humidity_sensor",
+        "min_value": 30.0,
+        "max_value": 50.0
+    },
+    {
+        "name": "pressure_sensor",
+        "min_value": 900.0,
+        "max_value": 1100.0
+    },
+    {
+        "name": "light_sensor",
+        "min_value": 100.0,
+        "max_value": 1000.0
+    },
+    {
+        "name": "motion_sensor",
+        "min_value": 0.0,
+        "max_value": 1.0
+    }
+]
