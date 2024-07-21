@@ -42,9 +42,9 @@ services:
     entrypoint: ["/mosquitto-entrypoint.sh"]
     healthcheck:
       test: ["CMD", "mosquitto_pub", "-h", "localhost", "-t", "test", "-m", "test", "-u", "${MOSQUITTO_USERNAME}", "-P", "${MOSQUITTO_PASSWORD}"]
-      interval: 30s
-      retries: 10
-      start_period: 60s
+      interval: 1m
+      retries: 3
+      start_period: 10s
 
   device_simulation:
     build: ./services/device_simulation
@@ -63,25 +63,8 @@ services:
     volumes:
       - ./config/device/device_config.json:/app/config/device/device_config.json
 
-
-  emqx:
-    image: emqx/emqx:latest
-    ports:
-      - "18083:18083"  # EMQX Dashboard
-    environment:
-      - EMQX_NAME=emqx
-      - EMQX_HOST=node1.emqx.io
-      - EMQX_NODE__COOKIE=emqxsecretcookie
-      - EMQX_LOADED_PLUGINS=emqx_management,emqx_dashboard
-    volumes:
-      - emqx-data:/opt/emqx/data
-      - emqx-log:/opt/emqx/log
-      - ./config/emqx/emqx_bridge_mqtt.conf:/opt/emqx/etc/emqx_bridge_mqtt.conf  # Mount the bridge configuration
-
 volumes:
   timescaledb-data:
   pgadmin-data:
   mosquitto-data:
   mosquitto-logs:
-  emqx-data:
-  emqx-log:
